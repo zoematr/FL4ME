@@ -4,9 +4,9 @@ import torch
 from flwr.app import ArrayRecord, Context, Message, MetricRecord, RecordDict
 from flwr.clientapp import ClientApp
 
-from FLfraud.task import Net, load_data
-from FLfraud.task import test as test_fn
-from FLfraud.task import train as train_fn
+from FedCAD.task import Net, load_data
+from FedCAD.task import test as test_fn
+from FedCAD.task import train as train_fn
 
 # Flower ClientApp
 app = ClientApp()

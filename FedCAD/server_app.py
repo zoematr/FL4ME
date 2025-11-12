@@ -5,7 +5,7 @@ from flwr.app import ArrayRecord, ConfigRecord, Context
 from flwr.serverapp import Grid, ServerApp
 from flwr.serverapp.strategy import FedAvg
 
-from FLfraud.task import Net
+from FedCAD.task import Net
 
 # Create ServerApp
 app = ServerApp()

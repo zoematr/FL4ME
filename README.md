@@ -1,4 +1,4 @@
-# FLfraud: A Flower / PyTorch app
+# FedCAD: A Flower / PyTorch app
 
 ## Install dependencies and project
 
@@ -13,7 +13,7 @@ pip install -e .
 
 ## Run with the Simulation Engine
 
-In the `FLfraud` directory, use `flwr run` to run a local simulation:
+In the `FedCAD` directory, use `flwr run` to run a local simulation:
 
 ```bash
 flwr run .
