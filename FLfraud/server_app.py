@@ -1,11 +1,11 @@
-"""DASECproj: A Flower / PyTorch app."""
+"""FLfraud: A Flower / PyTorch app."""
 
 import torch
 from flwr.app import ArrayRecord, ConfigRecord, Context
 from flwr.serverapp import Grid, ServerApp
 from flwr.serverapp.strategy import FedAvg
 
-from dasecproj.task import Net
+from FLfraud.task import Net
 
 # Create ServerApp
 app = ServerApp()

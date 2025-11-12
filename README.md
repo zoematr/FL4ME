@@ -1,4 +1,4 @@
-# DASECproj: A Flower / PyTorch app
+# FLfraud: A Flower / PyTorch app
 
 ## Install dependencies and project
 
@@ -13,7 +13,7 @@ pip install -e .
 
 ## Run with the Simulation Engine
 
-In the `DASECproj` directory, use `flwr run` to run a local simulation:
+In the `FLfraud` directory, use `flwr run` to run a local simulation:
 
 ```bash
 flwr run .

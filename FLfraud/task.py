@@ -1,4 +1,4 @@
-"""DASECproj: A Flower / PyTorch app."""
+"""FLfraud: A Flower / PyTorch app."""
 
 import torch
 import torch.nn as nn

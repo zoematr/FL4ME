@@ -1,12 +1,12 @@
-"""DASECproj: A Flower / PyTorch app."""
+"""FLfraud: A Flower / PyTorch app."""
 
 import torch
 from flwr.app import ArrayRecord, Context, Message, MetricRecord, RecordDict
 from flwr.clientapp import ClientApp
 
-from dasecproj.task import Net, load_data
-from dasecproj.task import test as test_fn
-from dasecproj.task import train as train_fn
+from FLfraud.task import Net, load_data
+from FLfraud.task import test as test_fn
+from FLfraud.task import train as train_fn
 
 # Flower ClientApp
 app = ClientApp()
