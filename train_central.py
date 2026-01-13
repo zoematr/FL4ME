@@ -23,14 +23,20 @@ def train_central(args):
     # load all data centrally (partition_id=0, num_partitions=1)
     trainloader, testloader = load_data(0, 1)
 
-    # set up wandb
-    wandb.init(project="FedCAD", name="centralized", config=vars(args), mode=args.wandb_mode)
-
-    transform = Compose([ToTensor(), Normalize(mean=[0.5], std=[0.5])])
-    ds = BreastMNIST(split="train", download=True, transform=transform)
-    loader = DataLoader(ds, batch_size=32, shuffle=True)
-    images, labels = next(iter(loader))
-    print(images.shape, labels.shape)
+    # W&B: log minimally and control model watching
+    wandb.init(
+        project="FedCAD",
+        name="centralized",
+        config=vars(args),
+        mode=args.wandb_mode,
+        settings=wandb.Settings(_disable_stats=True)  # optional: disable system metrics
+    )
+    wandb.define_metric("epoch")
+    wandb.define_metric("train_loss", step_metric="epoch")
+    wandb.define_metric("test_loss", step_metric="epoch")
+    wandb.define_metric("test_acc", step_metric="epoch")
+    if args.watch != "none":
+        wandb.watch(model, log=args.watch, log_freq=args.watch_freq)
 
     for epoch in range(1, args.epochs + 1):
         model.train()
@@ -53,14 +59,26 @@ def train_central(args):
             total_examples += batch_size
 
         train_loss = running_loss / total_examples
-        test_loss, test_acc = test(model, testloader, device)
 
-        wandb.log({"epoch": epoch, "train_loss": train_loss, "test_loss": test_loss, "test_acc": test_acc})
-        print(f"Epoch {epoch}/{args.epochs} | train_loss={train_loss:.4f} | test_loss={test_loss:.4f} | test_acc={test_acc:.4f}")
+        # log test metrics less frequently
+        if epoch % args.eval_interval == 0:
+            test_loss, test_acc = test(model, testloader, device)
+            wandb.log({"epoch": epoch, "train_loss": train_loss, "test_loss": test_loss, "test_acc": test_acc}, commit=True)
+            print(f"Epoch {epoch}/{args.epochs} | train_loss={train_loss:.4f} | test_loss={test_loss:.4f} | test_acc={test_acc:.4f}")
+        else:
+            wandb.log({"epoch": epoch, "train_loss": train_loss}, commit=True)
+            print(f"Epoch {epoch}/{args.epochs} | train_loss={train_loss:.4f}")
 
     os.makedirs("models", exist_ok=True)
     torch.save(model.state_dict(), "models/final_model_centralized.pt")
     print("Saved model -> models/final_model_centralized.pt")
+
+    # summarize final metrics
+    wandb.run.summary["final_train_loss"] = train_loss
+    test_loss, test_acc = test(model, testloader, device)
+    wandb.run.summary["final_test_loss"] = test_loss
+    wandb.run.summary["final_test_acc"] = test_acc
+
     wandb.finish()
 
 if __name__ == "__main__":
@@ -69,5 +87,11 @@ if __name__ == "__main__":
     p.add_argument("--lr", type=float, default=1e-3)
     p.add_argument("--gpu", action="store_true", help="use GPU if available")
     p.add_argument("--wandb-mode", choices=["online", "offline", "disabled"], default="online")
+
+    # new controls
+    p.add_argument("--eval-interval", type=int, default=1, help="log test metrics every N epochs")
+    p.add_argument("--watch", choices=["none", "gradients", "parameters", "all"], default="none", help="W&B model watching")
+    p.add_argument("--watch-freq", type=int, default=100, help="W&B watch log frequency (steps)")
+
     args = p.parse_args()
     train_central(args)
