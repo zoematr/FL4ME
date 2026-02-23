@@ -1,9 +1,11 @@
-"""FLfraud: A Flower / PyTorch app."""
+"""FedCAD: A Flower / PyTorch app."""
 
 import time
 import torch
 import wandb
 import numpy as np
+import os
+import csv
 from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score
 from flwr.app import ArrayRecord, ConfigRecord, Context
 from flwr.serverapp import Grid, ServerApp
@@ -13,6 +15,29 @@ from FedCAD.task import Net, load_data, test
 
 # Create ServerApp
 app = ServerApp()
+
+
+def save_to_csv(data: dict, csv_path: str = "FedCAD/results.csv"):
+    """Save results to CSV file, appending if it exists."""
+    os.makedirs(os.path.dirname(csv_path), exist_ok=True)
+    file_exists = os.path.exists(csv_path)
+    
+    fieldnames = [
+        "name", "training_type", "state", "lr",
+        "final_test_acc", "final_test_loss", "final_precision",
+        "final_recall", "final_f1", "final_auc_roc",
+        "total_training_time_min", "num_rounds", "fraction_train", "local_epochs",
+        "strategy", "total_local_epochs"
+    ]
+
+    
+    with open(csv_path, mode='a', newline='') as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        if not file_exists:
+            writer.writeheader()
+        writer.writerow(data)
+    
+    print(f"Results saved to {csv_path}")
 
 
 @app.main()
@@ -32,6 +57,7 @@ def main(grid: Grid, context: Context) -> None:
     noise_multiplier: float = float(context.run_config.get("noise-multiplier", 0.1))
     clipping_norm: float = float(context.run_config.get("clipping-norm", 1.0))
     num_sampled_clients: int = int(context.run_config.get("num-sampled-clients", 5))
+    use_wandb: bool = context.run_config.get("use-wandb", True)
 
     if context.run_config.get("fedprox", False):
         strategy = FedProx(
@@ -61,27 +87,30 @@ def main(grid: Grid, context: Context) -> None:
 
     # Initialize wandb with comprehensive config
     run_name = f"federated_lr{lr:.3f}_r{num_rounds}_le{local_epochs}"
-    wandb.init(
-        project="FedCAD",
-        name=run_name,
-        config={
-            "training_type": "federated",
-            "num_rounds": num_rounds,
-            "fraction_train": float(f"{fraction_train:.3f}"),
-            "local_epochs": local_epochs,
-            "strategy": strategy_name,
-            "lr": float(f"{lr:.4f}"),
-            "total_local_epochs": num_rounds * local_epochs,
-            "test_samples": len(testloader.dataset),
-        },
-        tags=["federated"],
-        group="comparison"
-    )
-    wandb.define_metric("round")
-    wandb.define_metric("train_loss", step_metric="round")
-    wandb.define_metric("test_loss", step_metric="round")
-    wandb.define_metric("test_acc", step_metric="round")
-
+    if use_wandb:
+        wandb.init(
+            project="FedCAD",
+            name=run_name,
+            config={
+                "training_type": "federated",
+                "num_rounds": num_rounds,
+                "fraction_train": float(f"{fraction_train:.3f}"),
+                "local_epochs": local_epochs,
+                "strategy": strategy_name,
+                "lr": float(f"{lr:.4f}"),
+                "total_local_epochs": num_rounds * local_epochs,
+                "test_samples": len(testloader.dataset),
+            },
+            tags=["federated"],
+            group="comparison"
+        )
+        wandb.define_metric("round")
+        wandb.define_metric("train_loss", step_metric="round")
+        wandb.define_metric("test_loss", step_metric="round")
+        wandb.define_metric("test_acc", step_metric="round")
+    else:
+        print("⚠️ WandB logging is disabled. Set 'use_wandb' to True in run config to enable.")
+    
     # Track start time
     start_time = time.time()
 
@@ -149,6 +178,26 @@ def main(grid: Grid, context: Context) -> None:
         "total_rounds": num_rounds,
         "total_local_epochs": num_rounds * local_epochs,
     })
+
+    save_to_csv({
+        "name": run_name,
+        "training_type": "federated",
+        "state": "finished",
+        "lr": lr,
+        "final_test_acc": test_acc,
+        "final_test_loss": test_loss,
+        "final_precision": precision,
+        "final_recall": recall,
+        "final_f1": f1,
+        "final_auc_roc": auc_roc,
+        "total_training_time_min": total_time / 60,
+        "num_rounds": num_rounds,
+        "fraction_train": float(f"{fraction_train:.3f}"),
+        "local_epochs": local_epochs,
+        "strategy": strategy_name,
+        "total_local_epochs": num_rounds * local_epochs,
+    })
+
 
     # Save final model to disk
     print("\nSaving final model to disk...")
