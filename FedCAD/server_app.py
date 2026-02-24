@@ -93,13 +93,17 @@ def main(grid: Grid, context: Context) -> None:
             name=run_name,
             config={
                 "training_type": "federated",
-                "num_rounds": num_rounds,
                 "fraction_train": float(f"{fraction_train:.3f}"),
                 "local_epochs": local_epochs,
                 "strategy": strategy_name,
                 "lr": float(f"{lr:.4f}"),
                 "total_local_epochs": num_rounds * local_epochs,
                 "test_samples": len(testloader.dataset),
+                "noise_multiplier": noise_multiplier,
+                "clipping_norm": clipping_norm,
+                "num_sampled_clients": num_sampled_clients,
+                "num_rounds": num_rounds,
+                "proximal_mu": proximal_mu,
             },
             tags=["federated"],
             group="comparison"
