@@ -88,6 +88,7 @@ def main(grid: Grid, context: Context) -> None:
     # Initialize wandb with comprehensive config
     run_name = f"federated_lr{lr:.3f}_r{num_rounds}_le{local_epochs}"
     if use_wandb:
+        is_sweep = os.environ.get("WANDB_SWEEP_ID") is not None
         wandb.init(
             project="FedCAD",
             name=run_name,
@@ -105,8 +106,8 @@ def main(grid: Grid, context: Context) -> None:
                 "num_rounds": num_rounds,
                 "proximal_mu": proximal_mu,
             },
-            tags=["federated"],
-            group="comparison"
+            tags=["federated", "random_search"] if is_sweep else ["federated"],
+            group="random_search" if is_sweep else "comparison"
         )
         wandb.define_metric("round")
         wandb.define_metric("train_loss", step_metric="round")
