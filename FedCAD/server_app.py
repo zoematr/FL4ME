@@ -1,11 +1,12 @@
 """FedCAD: A Flower / PyTorch app."""
-
+from datetime import datetime
 import time
 import torch
 import wandb
 import numpy as np
 import os
 import csv
+import pandas as pd
 from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score
 from flwr.app import ArrayRecord, ConfigRecord, Context
 from flwr.serverapp import Grid, ServerApp
@@ -17,25 +18,34 @@ from FedCAD.task import Net, load_data, test
 app = ServerApp()
 
 
-def save_to_csv(data: dict, csv_path: str = "FedCAD/results.csv"):
-    """Save results to CSV file, appending if it exists."""
-    os.makedirs(os.path.dirname(csv_path), exist_ok=True)
-    file_exists = os.path.exists(csv_path)
-    
-    fieldnames = [
-        "name", "training_type", "state", "lr",
+#python train_central.py --epochs 10
+def save_to_csv(data: dict, csv_path: str = "results.csv"):
+    """Save results to CSV file with consistent column order."""
+    columns = [
+        "name", "training_type", "state", "strategy",
+        "lr", "epochs", "num_rounds", "local_epochs",
         "final_test_acc", "final_test_loss", "final_precision",
         "final_recall", "final_f1", "final_auc_roc",
-        "total_training_time_min", "num_rounds", "fraction_train", "local_epochs",
-        "strategy", "total_local_epochs"
+        "total_training_time_min", "created_at"
     ]
-
     
-    with open(csv_path, mode='a', newline='') as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        if not file_exists:
-            writer.writeheader()
-        writer.writerow(data)
+    # Ensure all columns exist in data
+    for col in columns:
+        if col not in data:
+            data[col] = None
+    
+    new_df = pd.DataFrame([data])[columns]
+    
+    if os.path.exists(csv_path):
+        # Read existing, ensure same columns, append
+        existing_df = pd.read_csv(csv_path)
+        for col in columns:
+            if col not in existing_df.columns:
+                existing_df[col] = None
+        combined_df = pd.concat([existing_df[columns], new_df], ignore_index=True)
+        combined_df.to_csv(csv_path, index=False)
+    else:
+        new_df.to_csv(csv_path, index=False)
     
     print(f"Results saved to {csv_path}")
 
@@ -43,7 +53,7 @@ def save_to_csv(data: dict, csv_path: str = "FedCAD/results.csv"):
 @app.main()
 def main(grid: Grid, context: Context) -> None:
     """Main entry point for the ServerApp."""
-
+    created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     # Read run config
     fraction_train: float = context.run_config["fraction-train"]
     num_rounds: int = context.run_config["num-server-rounds"]
@@ -188,7 +198,11 @@ def main(grid: Grid, context: Context) -> None:
         "name": run_name,
         "training_type": "federated",
         "state": "finished",
+        "strategy": strategy_name,
         "lr": lr,
+        "epochs": None,  # Not applicable for federated
+        "num_rounds": num_rounds,
+        "local_epochs": local_epochs,
         "final_test_acc": test_acc,
         "final_test_loss": test_loss,
         "final_precision": precision,
@@ -196,11 +210,7 @@ def main(grid: Grid, context: Context) -> None:
         "final_f1": f1,
         "final_auc_roc": auc_roc,
         "total_training_time_min": total_time / 60,
-        "num_rounds": num_rounds,
-        "fraction_train": float(f"{fraction_train:.3f}"),
-        "local_epochs": local_epochs,
-        "strategy": strategy_name,
-        "total_local_epochs": num_rounds * local_epochs,
+        "created_at": created_at,
     })
 
 
