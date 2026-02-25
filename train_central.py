@@ -10,7 +10,7 @@ from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_sco
 from torchvision.transforms import Compose, ToTensor, Normalize
 from medmnist import BreastMNIST
 from torch.utils.data import DataLoader
-from FedCAD.task import Net, load_data, test
+from FL4ME.task import Net, load_data, test
 
 
 #run with:
@@ -69,7 +69,7 @@ def train_central(args):
     run_name = f"central_lr{args.lr}_ep{args.epochs}"
     if use_wandb:
         wandb.init(
-            project="FedCAD",
+            project="FL4ME",
             name=run_name,
             config=config,
             mode=args.wandb_mode,

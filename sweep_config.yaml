@@ -1,4 +1,4 @@
-project: FedCAD
+project: FL4ME
 entity: louisewiljander-ludwig-maximilianuniversity-of-munich
 program: run_sweep.py
 method: random

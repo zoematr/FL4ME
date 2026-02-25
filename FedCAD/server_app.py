@@ -1,4 +1,4 @@
-"""FedCAD: A Flower / PyTorch app."""
+"""FL4ME: A Flower / PyTorch app."""
 from datetime import datetime
 import time
 import torch
@@ -12,7 +12,7 @@ from flwr.app import ArrayRecord, ConfigRecord, Context
 from flwr.serverapp import Grid, ServerApp
 from flwr.serverapp.strategy import FedAvg, FedProx, DifferentialPrivacyServerSideFixedClipping
 
-from FedCAD.task import Net, load_data, test
+from FL4ME.task import Net, load_data, test
 
 # Create ServerApp
 app = ServerApp()
@@ -100,7 +100,7 @@ def main(grid: Grid, context: Context) -> None:
     if use_wandb:
         is_sweep = os.environ.get("WANDB_SWEEP_ID") is not None
         wandb.init(
-            project="FedCAD",
+            project="FL4ME",
             name=run_name,
             config={
                 "training_type": "federated",

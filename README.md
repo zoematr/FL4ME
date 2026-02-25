@@ -1,6 +1,6 @@
-# 🩺 FedCAD - FEDerated Clinical Anomaly Detection
+# 🩺 FL4ME - FEDerated Clinical Anomaly Detection
 
-Welcome to **FedCAD**! This project benchmarks **centralized** vs **federated learning** for breast cancer detection using the BreastMNIST dataset, with a focus on privacy and real-world clinical relevance.
+Welcome to **FL4ME**! This project benchmarks **centralized** vs **federated learning** for breast cancer detection using the BreastMNIST dataset, with a focus on privacy and real-world clinical relevance.
 
 ---
 
@@ -40,7 +40,7 @@ Welcome to **FedCAD**! This project benchmarks **centralized** vs **federated le
 
 ```
 Fed-CAD/
-├── FedCAD/                # Source code for the Federated experiments
+├── FL4ME/                # Source code for the Federated experiments
 ├── models/                # Saved model checkpoints
 ├── results/               # Exported results and analysis
 ├── run_experiments.ipynb  # Notebook to run experiments
