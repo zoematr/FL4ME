@@ -1,4 +1,4 @@
-# 🩺 FL4ME - FEDerated Clinical Anomaly Detection
+# 🩺 FL4ME - Federated Learning for Medical Enclaves
 
 Welcome to **FL4ME**! This project benchmarks **centralized** vs **federated learning** for breast cancer detection using the BreastMNIST dataset, with a focus on privacy and real-world clinical relevance.
 
